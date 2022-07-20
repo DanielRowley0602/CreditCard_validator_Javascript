@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang-"en">
+<head>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+	<!--input form-->
+	<form name="form" action="webpage v2.html" method="GET">
+		<div class="box">
+			<label for="name">Name:</label>
+			<input id="name" name="name" type="text"><br><br>
+			
+			<label for="email">Email:</label>
+			<input id="email" name="email" type="email"><br><br>
+		
+			<label for="cardnumber">Card:</label>
+			<input id="cardnumber" name="cardnumber" type="text"><br><br>
+			
+			<button type="button" onclick="CheckForm()">Submit</button>
+		</div>
+	</form>
+	
+	<!--encryption script-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	
+	<script src="https://smtpjs.com/v3/smtp.js"></script>
+	
+	<!--email script-->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+	<script type="text/javascript">
+	
+	<!--identifies EmailJs account-->
+	(function() {
+	emailjs.init("user_ecr6ovFtIt3EK68YlgMWs");
+	})();
+	</script>
+  
+	<script>
+	
+	function sendEmail(name, email, card, fromEmail)
+	{
+		<!--enters encrypted private data into email message-->
+		var tempParams = {
+			from_name: fromEmail,
+			to_name: "dantom9999@gmail",
+			message: "All inputs have been encrypted to protect against SQL injection. Name: " + name + " " + "Email: " + email + " " + "Card number: " + card,
+		};
+		
+		<!--sends the email to dantom9999@gmail.com-->
+		emailjs.send('service_pszv03g','template_3rd7kzk',tempParams)
+		.then(function(res){
+			<!--confirms that the email has been sent-->
+			alert("Email sent correctly");;
+		})
+	}
+	
+	<!--encrypts private data-->
+	var crypt = {
+		secret : "THESECRET",
+		encrypt : function (clear) {
+			var cipher = CryptoJS.AES.encrypt(clear, crypt.secret);
+			cipher = cipher.toString();
+			return cipher;
+		}
+	};
+	
+	<!--places all input values into variables-->
+	function encryptinputs()
+	{
+		var namecipher = crypt.encrypt(document.form.name.value);
+
+		var emailcipher = crypt.encrypt(document.form.email.value);
+
+		var cardcipher = crypt.encrypt(document.form.cardnumber.value);
+
+		const email = document.form.email.value;
+		
+		<!--sends email-->
+		sendEmail(namecipher, emailcipher, cardcipher, email);
+	}
+	
+	<!--changes input feild colour to-->
+	function inputcolour(input, colour) {
+		var inputVal = document.getElementById(input);
+		inputVal.style.backgroundColor = colour;
+	}
+	
+	//const password = document.getElementById('password')
+	//const form = document.getElementById('form')
+	//const errorElement = document.getElementById('error')
+
+	function CheckForm()
+	{
+		<!--places all input values into variables-->
+		const name = document.form.name.value;
+		const email = document.form.email.value;
+		const cardnumber = document.form.cardnumber.value;
+		
+		var validinputs = 0;
+		var checkspassed = 0;
+		var nonstring = 0;
+
+		if(name != "")
+		{
+			checkspassed ++;
+			
+			<!--remove all spaces from "name"-->
+			const namenospace = name.replace(/ /g, '');
+			
+			<!--define special characters-->
+			var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+			
+			<!--checkthat name doesn't contain any special characters-->
+			if(format.test(namenospace) == false)
+			{
+				checkspassed ++;
+			}
+			
+			<!--check that "name" contains no number-->
+			for (var i = 0; i < namenospace.length; i++) {				
+				if(isNaN(namenospace[i]) == false)
+				{
+					nonstring ++;
+				}
+			}
+			
+			if(nonstring == 0)
+			{
+				checkspassed ++;
+			}	
+		}
+		
+		<!--turn "name" input field green if "name" is valid-->
+		if(checkspassed == 3)
+		{
+			inputcolour("name", "#89C82E")
+			validinputs++;
+		}else <!--turn "name" input field red if "name" is invalid-->
+		{
+			inputcolour("name", "#E70064");
+		}
+		
+		checkspassed = 0;
+		
+		if(email != "")
+		{
+			checkspassed ++;
+			
+			<!--define email pattern-->
+			var pattern = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+			
+			<!--check that "Email" matches pattern-->
+			if(email.match(pattern))
+			{
+				checkspassed ++;
+			}
+
+		}
+		
+		<!--turn "Email" input field green if "Email" is valid-->
+		if(checkspassed == 2)
+		{
+			inputcolour("email", "#89C82E")
+			validinputs++;
+		}else <!--turn "Email" input field red if "Email" is invalid-->
+		{
+			inputcolour("email", "#E70064");
+		}
+		
+		checkspassed = 0;
+		
+		if(cardnumber != "")
+		{	
+			checkspassed ++;
+			
+			<!--remove any spaces and dash from "Email"-->
+			const cardnumbernospace = cardnumber.replace(/-| /g, '');
+		
+			if(isNaN(cardnumbernospace) == false)
+			{
+				checkspassed ++;
+				
+				<!--check that cardnumber is 16 digits long-->
+				if(cardnumbernospace.length == 16)
+				{
+					checkspassed ++;
+					
+					var luhnarray = [];
+					var luhncount = 0;
+					var timestwonumber = 0;
+					var timestwosum = 0;
+					
+					for (var i = 0; i < cardnumbernospace.length; i++) {
+						<!--take every other digit in the cardnumber (starting with the first) 
+						<!--and multiply them by 2
+						<!--take those results results and split them into their individual
+						<!--digits and add them to together
+						if(i % 2 == 0)
+						{
+							timestwonumber = cardnumbernospace.charAt(i) * 2;
+							
+							if(timestwonumber > 9)
+							{
+								function addTwoDigits(n) {
+									const arr = (n).toString(10).split("").map(Number);
+									
+									timestwosum = arr[0] + arr[1];
+									
+									return timestwosum;
+								}
+
+								luhnarray[i] = parseInt(addTwoDigits(timestwonumber));
+							}else
+							{
+								luhnarray[i] = timestwonumber;
+							}
+							
+							
+						}
+						else <!--take every other digit in the cardnumber (starting with the second)-->
+						{
+							luhnarray[i] = cardnumbernospace[i];
+						}
+					}
+					
+					for (var i = 0; i < luhnarray.length; i++) {
+						luhncount = parseInt(luhncount) + parseInt(luhnarray[i]);
+					}
+					
+					if(luhncount % 10 == 0)
+					{
+						checkspassed ++;
+					}
+					
+					
+				}
+			}
+		}
+		
+		if(checkspassed == 4) <!--turn "Cardnumber" input field green if "Cardnumber" is valid-->
+		{
+			inputcolour("cardnumber", "#89C82E")
+			validinputs++;
+		}else <!--turn "Cardnumber" input field red if "Cardnumber" is invalid-->
+		{
+			inputcolour("cardnumber", "#E70064");
+		}
+		
+		<!--encrypt all inputs if they are all valid-->
+		if(validinputs == 3)
+		{
+			encryptinputs();
+		}
+	}
+	</script>
+</body>
+</html>
